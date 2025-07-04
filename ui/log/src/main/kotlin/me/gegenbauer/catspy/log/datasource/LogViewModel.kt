@@ -36,6 +36,7 @@ import me.gegenbauer.catspy.log.ui.tab.BaseLogMainPanel
 import me.gegenbauer.catspy.strings.STRINGS
 import me.gegenbauer.catspy.strings.get
 import me.gegenbauer.catspy.utils.file.writeLinesWithProgress
+import me.gegenbauer.catspy.utils.string.CacheableStringBuilder
 import me.gegenbauer.catspy.view.panel.StatusPanel
 import me.gegenbauer.catspy.view.panel.Task
 import me.gegenbauer.catspy.view.panel.TaskHandle
@@ -171,6 +172,23 @@ class LogViewModel(
                 }
                 Result.failure<File>(it)
             }.getOrDefault(Result.failure(Exception(STRINGS.ui.unknownError)))
+        }
+    }
+
+    /**
+     * Get all logs as a string for copying to clipboard
+     */
+    suspend fun getAllLogsAsString(isFilteredLog: Boolean): String = withContext(Dispatchers.GIO) {
+        val repo = if (isFilteredLog) filteredLogRepo else fullLogRepo
+        val logs = repo.readLogItems { it.toList() }
+        val builder = CacheableStringBuilder.obtain()
+        try {
+            logs.forEach { log ->
+                builder.appendLine(log.toString())
+            }
+            builder.build()
+        } finally {
+            builder.recycle()
         }
     }
 
