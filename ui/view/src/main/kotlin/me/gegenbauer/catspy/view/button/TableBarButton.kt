@@ -12,6 +12,6 @@ class TableBarButton(title:String) : GButton(title){
     }
 
     companion object {
-        private const val MAX_TITLE = 15
+        private const val MAX_TITLE = 20
     }
 }

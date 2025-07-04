@@ -8,9 +8,17 @@ import me.gegenbauer.catspy.databinding.property.support.selectedProperty
 import me.gegenbauer.catspy.log.event.FullLogVisibilityChangedEvent
 import me.gegenbauer.catspy.log.ui.tab.BaseLogMainPanel
 import me.gegenbauer.catspy.strings.STRINGS
+import me.gegenbauer.catspy.utils.Clipboard
 import me.gegenbauer.catspy.utils.event.EventManager
 import me.gegenbauer.catspy.utils.ui.applyTooltip
+import me.gegenbauer.catspy.utils.ui.showInfoDialog
 import me.gegenbauer.catspy.view.button.ColorToggleButton
+import me.gegenbauer.catspy.view.button.TableBarButton
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import java.awt.Toolkit
+import java.awt.datatransfer.StringSelection
 import javax.swing.JLabel
 import javax.swing.event.ListSelectionEvent
 
@@ -23,6 +31,7 @@ class FilteredLogPanel(
     private val bookmarksBtn = ColorToggleButton(STRINGS.ui.bookmarks) applyTooltip STRINGS.toolTip.viewBookmarksToggle
     private val fullBtn = ColorToggleButton(STRINGS.ui.full) applyTooltip STRINGS.toolTip.viewFullToggle
     private val showFullLogBtn = ColorToggleButton(STRINGS.ui.showFullLogBtn) applyTooltip STRINGS.toolTip.showFullLog
+    private val copyLogBtn = TableBarButton(STRINGS.ui.copyFilteredLogBtn) applyTooltip STRINGS.toolTip.copyFilteredLog
 
     private val eventManager: EventManager
         get() = kotlin.run {
@@ -35,6 +44,7 @@ class FilteredLogPanel(
         bookmarksBtn.margin = buttonMargin
         fullBtn.margin = buttonMargin
         showFullLogBtn.margin = buttonMargin
+        copyLogBtn.margin = buttonMargin
         showFullLogBtn.isSelected = true
 
         createUI()
@@ -45,6 +55,10 @@ class FilteredLogPanel(
 
         showFullLogBtn.addActionListener {
             eventManager.publish(FullLogVisibilityChangedEvent(showFullLogBtn.isSelected))
+        }
+        
+        copyLogBtn.addActionListener {
+            copyFilteredLogToClipboard()
         }
     }
 
@@ -67,6 +81,7 @@ class FilteredLogPanel(
         ctrlMainPanel.add(fullBtn)
         ctrlMainPanel.add(bookmarksBtn)
         ctrlMainPanel.add(showFullLogBtn)
+        ctrlMainPanel.add(copyLogBtn)
         ctrlMainPanel.updateUI()
     }
 
@@ -97,6 +112,21 @@ class FilteredLogPanel(
 
             if (table.isLastRowSelected()) {
                 setGoToLast(true)
+            }
+        }
+    }
+    
+    private fun copyFilteredLogToClipboard() {
+        CoroutineScope(Dispatchers.Main).launch {
+            val content = tableModel.viewModel.getAllLogsAsString(true)
+            if (content.trim().isEmpty()) {
+                showInfoDialog(
+                    this@FilteredLogPanel,
+                    STRINGS.ui.copyFilteredLogBtn,
+                    STRINGS.ui.noFilteredLogsWarning
+                )
+            } else {
+                Clipboard.copyToClipboard(content)
             }
         }
     }
