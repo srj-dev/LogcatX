@@ -14,5 +14,3 @@ applog
 */catspy.log*
 */settings.json
 .DS_Store
-*/bin/
-*/*/bin/
